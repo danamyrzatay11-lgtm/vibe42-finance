@@ -344,8 +344,12 @@
     save();
   }
 
+  const DELETE_PASSWORD = 'vibe42';
+
   function deleteRow(id) {
-    if (!confirm('Удалить запись?')) return;
+    const pwd = prompt('Введите пароль для удаления:');
+    if (pwd === null) return;
+    if (pwd !== DELETE_PASSWORD) { alert('Неверный пароль'); return; }
     data = data.filter(r => r.id !== id);
     render();
     save();
