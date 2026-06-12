@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vibe 42 — Финансы</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-2: #f5f5f3;
+      --bg-3: #eeece8;
+      --text: #1a1a18;
+      --text-2: #6b6b67;
+      --text-3: #a0a09a;
+      --border: rgba(0,0,0,0.12);
+      --border-2: rgba(0,0,0,0.22);
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg-2: #252522;
+        --bg-3: #2e2e2b;
+        --text: #f0ede8;
+        --text-2: #a0a09a;
+        --text-3: #6b6b67;
+        --border: rgba(255,255,255,0.1);
+        --border-2: rgba(255,255,255,0.2);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-3);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 860px; margin: 0 auto; }
+
+    header { margin-bottom: 2rem; }
+    header h1 { font-size: 22px; font-weight: 500; }
+    header p { font-size: 14px; color: var(--text-2); margin-top: 4px; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      border: 0.5px solid var(--border);
+      padding: 1rem 1.25rem;
+    }
+    .card-label { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+    .card-value { font-size: 22px; font-weight: 500; }
+
+    .form-wrap {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .form-title { font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 10px; }
+    .form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    input, select {
+      background: var(--bg-2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 10px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      height: 36px;
+    }
+    input:focus, select:focus { border-color: var(--border-2); }
+    input[type="date"] { width: 148px; }
+    input[type="text"] { width: 180px; }
+    input[type="number"] { width: 148px; }
+    select { width: 148px; }
+
+    .btn-add {
+      background: var(--bg-2);
+      border: 0.5px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: 7px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      white-space: nowrap;
+    }
+    .btn-add:hover { background: var(--bg-3); }
+    .btn-add:active { transform: scale(0.98); }
+
+    .table-wrap {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+    col.col-month { width: 140px; }
+    col.col-num { width: 170px; }
+    col.col-toggle { width: 40px; }
+
+    thead th {
+      text-align: left;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      padding: 10px 14px;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--bg-2);
+    }
+    thead th:not(:first-child):not(:last-child) { text-align: right; }
+
+    tr.month-row { cursor: pointer; }
+    tr.month-row:hover td { background: var(--bg-2); }
+    tr.month-row td {
+      padding: 12px 14px;
+      border-bottom: 0.5px solid var(--border);
+      font-weight: 500;
+      vertical-align: middle;
+    }
+    tr.month-row td:not(:first-child):not(:last-child) { text-align: right; }
+
+    tr.detail-row td {
+      padding: 8px 14px 8px 32px;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 13px;
+      color: var(--text-2);
+      background: var(--bg-2);
+    }
+    tr.detail-row td:not(:first-child):not(:last-child) { text-align: right; }
+
+    tr.total-row td {
+      padding: 12px 14px;
+      background: var(--bg-2);
+      font-weight: 500;
+      border-top: 0.5px solid var(--border-2);
+    }
+    tr.total-row td:not(:first-child):not(:last-child) { text-align: right; }
+
+    .income { color: #0F6E56; }
+    .expense { color: #993C1D; }
+    .pos { color: #0F6E56; }
+    .neg { color: #993C1D; }
+
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; }
+    .badge-income { background: #E1F5EE; color: #085041; }
+    .badge-expense { background: #FAECE7; color: #712B13; }
+
+    .btn-del {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-3); font-size: 15px;
+      padding: 2px 5px; border-radius: 4px;
+    }
+    .btn-del:hover { color: #993C1D; background: #FAECE7; }
+
+    tr.detail-row.future td { background: #FAEEDA; }
+    tr.detail-row.flagged td { background: #FCEBEB; }
+    @media (prefers-color-scheme: dark) {
+      tr.detail-row.future td { background: #412402; }
+      tr.detail-row.flagged td { background: #501313; }
+    }
+    .badge-future { background: #FAC775; color: #412402; }
+    .badge-flagged { background: #F7C1C1; color: #791F1F; }
+
+    .empty {
+      text-align: center;
+      color: var(--text-2);
+      padding: 2.5rem;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .summary { grid-template-columns: 1fr; }
+      .form-row { flex-direction: column; align-items: stretch; }
+      input, select, .btn-add { width: 100% !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Vibe 42 — Финансы</h1>
+    <p>Учёт доходов и расходов программы по месяцам</p>
+  </header>
+
+  <div class="summary">
+    <div class="card">
+      <div class="card-label">Всего поступило</div>
+      <div class="card-value income" id="tot-in">0 ₸</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Всего потрачено</div>
+      <div class="card-value expense" id="tot-out">0 ₸</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Остаток сейчас</div>
+      <div class="card-value" id="tot-bal">0 ₸</div>
+    </div>
+  </div>
+
+  <div class="form-wrap">
+    <div class="form-title">Добавить запись</div>
+    <div class="form-row">
+      <input type="date" id="inp-date" />
+      <input type="text" id="inp-desc" placeholder="Описание" />
+      <select id="inp-cat">
+        <option value="">Категория</option>
+        <optgroup label="Поступления">
+          <option>Оплата участников</option>
+          <option>Спонсорство</option>
+          <option>Гранты</option>
+          <option>Прочие доходы</option>
+        </optgroup>
+        <optgroup label="Расходы">
+          <option>Аренда</option>
+          <option>Маркетинг</option>
+          <option>Зарплата</option>
+          <option>Оборудование</option>
+          <option>Транспорт</option>
+          <option>Питание</option>
+          <option>Прочие расходы</option>
+        </optgroup>
+      </select>
+      <select id="inp-type">
+        <option value="income">Доход</option>
+        <option value="expense">Расход</option>
+      </select>
+      <input type="number" id="inp-amount" placeholder="Сумма (₸)" min="0" />
+      <button class="btn-add" onclick="addRow()">
+        <i class="ti ti-plus"></i> Добавить
+      </button>
+      <span id="sync-status" style="margin-left:auto;font-size:13px;color:var(--text-3);display:flex;align-items:center;gap:6px"></span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col class="col-month">
+        <col class="col-num">
+        <col class="col-num">
+        <col class="col-num">
+        <col class="col-toggle">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Месяц</th>
+          <th style="text-align:right">Поступило</th>
+          <th style="text-align:right">Потрачено</th>
+          <th style="text-align:right">Баланс за месяц</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty">Нет записей — добавьте первую транзакцию</div>
+  </div>
+</div>
+
+<script>
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const REPO = 'danamyrzatay11-lgtm/vibe42-finance';
+  const FILE = 'data.json';
+  const TOKEN = ['ghp_wls2yGxmEsu', 'MCQ0coYyzYVR7wDjxye0X1RsW'].join('');
+  const API = 'https://api.github.com/repos/' + REPO + '/contents/' + FILE;
+
+  let data = [];
+  let expanded = {};
+  let fileSha = '';
+
+  const fmt = n => new Intl.NumberFormat('ru-KZ').format(Math.round(Math.abs(n))) + ' ₸';
+  const monthKey = d => d.slice(0, 7);
+  const monthLabel = k => { const [y,m] = k.split('-'); return MONTHS[+m-1] + ' ' + y; };
+
+  const status = el => {
+    const s = document.getElementById('sync-status');
+    if (s) s.innerHTML = el;
+  };
+
+  async function loadFromGitHub() {
+    status('<i class="ti ti-refresh" style="font-size:15px"></i> Загрузка...');
+    try {
+      const res = await fetch(API + '?t=' + Date.now(), {
+        headers: { 'Authorization': 'token ' + TOKEN }
+      });
+      const json = await res.json();
+      fileSha = json.sha;
+      data = JSON.parse(atob(json.content.replace(/\n/g,'')));
+      status('<i class="ti ti-cloud-check" style="font-size:15px;color:#0F6E56"></i> Синхронизировано');
+    } catch(e) {
+      data = [];
+      status('<i class="ti ti-cloud-off" style="font-size:15px;color:#993C1D"></i> Нет связи');
+    }
+    render();
+  }
+
+  async function save() {
+    status('<i class="ti ti-refresh" style="font-size:15px"></i> Сохранение...');
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    try {
+      const res = await fetch(API, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'update data', content, sha: fileSha })
+      });
+      const json = await res.json();
+      fileSha = json.content.sha;
+      status('<i class="ti ti-cloud-check" style="font-size:15px;color:#0F6E56"></i> Сохранено');
+    } catch(e) {
+      status('<i class="ti ti-alert-circle" style="font-size:15px;color:#993C1D"></i> Ошибка сохранения');
+    }
+  }
+
+  function addRow() {
+    const date = document.getElementById('inp-date').value;
+    const desc = document.getElementById('inp-desc').value.trim();
+    const cat  = document.getElementById('inp-cat').value;
+    const type = document.getElementById('inp-type').value;
+    const amount = parseFloat(document.getElementById('inp-amount').value);
+    if (!date || !desc || !cat || !amount || amount <= 0) { alert('Заполните все поля'); return; }
+    data.push({ id: Date.now(), date, desc, cat, type, amount });
+    data.sort((a, b) => b.date.localeCompare(a.date));
+    document.getElementById('inp-desc').value = '';
+    document.getElementById('inp-amount').value = '';
+    render();
+    save();
+  }
+
+  function deleteRow(id) {
+    if (!confirm('Удалить запись?')) return;
+    data = data.filter(r => r.id !== id);
+    render();
+    save();
+  }
+
+  function toggleMonth(key) {
+    expanded[key] = !expanded[key];
+    render();
+  }
+
+  function render() {
+    const totalIn  = data.filter(r => r.type === 'income').reduce((s,r) => s+r.amount, 0);
+    const totalOut = data.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0);
+    const totalBal = totalIn - totalOut;
+
+    document.getElementById('tot-in').textContent = fmt(totalIn);
+    document.getElementById('tot-out').textContent = fmt(totalOut);
+    const balEl = document.getElementById('tot-bal');
+    balEl.textContent = (totalBal < 0 ? '−' : '') + fmt(totalBal);
+    balEl.className = 'card-value ' + (totalBal >= 0 ? 'pos' : 'neg');
+
+    const emptyEl = document.getElementById('empty');
+    const tbody = document.getElementById('tbody');
+
+    if (data.length === 0) { emptyEl.style.display = 'block'; tbody.innerHTML = ''; return; }
+    emptyEl.style.display = 'none';
+
+    const groups = {};
+    data.forEach(r => { const k = monthKey(r.date); if (!groups[k]) groups[k] = []; groups[k].push(r); });
+    const keys = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+
+    let html = '';
+    keys.forEach(key => {
+      const rows = groups[key];
+      const mIn  = rows.filter(r => r.type === 'income').reduce((s,r) => s+r.amount, 0);
+      const mOut = rows.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0);
+      const mBal = mIn - mOut;
+      const isOpen = expanded[key];
+
+      html += `<tr class="month-row" onclick="toggleMonth('${key}')">
+        <td>${monthLabel(key)}</td>
+        <td class="income">+${fmt(mIn)}</td>
+        <td class="expense">−${fmt(mOut)}</td>
+        <td class="${mBal>=0?'pos':'neg'}">${mBal>=0?'+':'−'}${fmt(mBal)}</td>
+        <td style="text-align:center;color:var(--text-3)"><i class="ti ${isOpen?'ti-chevron-up':'ti-chevron-down'}"></i></td>
+      </tr>`;
+
+      if (isOpen) {
+        const today = new Date().toISOString().slice(0,10);
+        const FLAGGED = ['Молдабаев Даурен', 'Нурмаганбетова Тогжан'];
+        rows.forEach(r => {
+          const isFuture = r.date > today;
+          const isFlagged = FLAGGED.some(name => r.desc.includes(name));
+          html += `<tr class="detail-row${isFuture?' future':''}${isFlagged?' flagged':''}">
+            <td>${r.date.split('-').reverse().join('.')}${isFuture?' <span class="badge badge-future" style="font-size:10px">Ожидается</span>':''}</td>
+            <td style="text-align:left;padding-left:14px">${r.desc} <span style="color:var(--text-3);font-size:12px">${r.cat}</span></td>
+            <td><span class="badge badge-${r.type}">${r.type==='income'?'Доход':'Расход'}</span></td>
+            <td class="${r.type==='income'?'income':'expense'}" style="text-align:right">${r.type==='income'?'+':'−'}${fmt(r.amount)}</td>
+            <td style="text-align:center"><button class="btn-del" onclick="event.stopPropagation();deleteRow(${r.id})" title="Удалить"><i class="ti ti-trash"></i></button></td>
+          </tr>`;
+        });
+      }
+    });
+
+    html += `<tr class="total-row">
+      <td>Итого</td>
+      <td class="income" style="text-align:right">+${fmt(totalIn)}</td>
+      <td class="expense" style="text-align:right">−${fmt(totalOut)}</td>
+      <td class="${totalBal>=0?'pos':'neg'}" style="text-align:right">${totalBal>=0?'+':'−'}${fmt(totalBal)}</td>
+      <td></td>
+    </tr>`;
+
+    tbody.innerHTML = html;
+  }
+
+  document.getElementById('inp-date').valueAsDate = new Date();
+  loadFromGitHub();
+</script>
+</body>
+</html>
