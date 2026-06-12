@@ -247,6 +247,13 @@
       <button class="btn-add" onclick="addRow()">
         <i class="ti ti-plus"></i> Добавить
       </button>
+      <button class="btn-add" onclick="exportData()" title="Скачать резервную копию на компьютер">
+        <i class="ti ti-download"></i> Резервная копия
+      </button>
+      <label class="btn-add" style="cursor:pointer" title="Восстановить данные из файла">
+        <i class="ti ti-upload"></i> Восстановить
+        <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+      </label>
       <span id="sync-status" style="margin-left:auto;font-size:13px;color:var(--text-3);display:flex;align-items:center;gap:6px"></span>
     </div>
   </div>
@@ -342,6 +349,34 @@
     document.getElementById('inp-amount').value = '';
     render();
     save();
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'vibe42-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+  }
+
+  function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const pwd = prompt('Введите пароль для восстановления:');
+    if (pwd !== 'vibe42') { alert('Неверный пароль'); e.target.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (!Array.isArray(imported)) throw new Error();
+        data = imported;
+        data.sort((a, b) => b.date.localeCompare(a.date));
+        render();
+        save();
+        e.target.value = '';
+      } catch { alert('Неверный формат файла'); }
+    };
+    reader.readAsText(file);
   }
 
   const DELETE_PASSWORD = 'vibe42';
