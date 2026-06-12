@@ -310,7 +310,7 @@
       });
       const json = await res.json();
       fileSha = json.sha;
-      data = JSON.parse(atob(json.content.replace(/\n/g,'')));
+      data = JSON.parse(decodeURIComponent(escape(atob(json.content.replace(/\n/g,'')))));
       status('<i class="ti ti-cloud-check" style="font-size:15px;color:#0F6E56"></i> Синхронизировано');
     } catch(e) {
       data = [];
