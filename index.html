@@ -163,6 +163,10 @@
     .badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; }
     .badge-income { background: #E1F5EE; color: #085041; }
     .badge-expense { background: #FAECE7; color: #712B13; }
+    .badge-planned { background: #F1EFE8; color: #5F5E5A; }
+    .badge-done { background: #EAF3DE; color: #27500A; }
+    .btn-approve { background: none; border: 0.5px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; padding: 2px 8px; color: var(--text-2); white-space: nowrap; }
+    .btn-approve:hover { background: #EAF3DE; color: #27500A; border-color: #639922; }
 
     .btn-del {
       background: none; border: none; cursor: pointer;
@@ -265,6 +269,7 @@
         <col class="col-num">
         <col class="col-num">
         <col class="col-num">
+        <col style="width:120px">
         <col class="col-toggle">
       </colgroup>
       <thead>
@@ -273,6 +278,7 @@
           <th style="text-align:right">Поступило</th>
           <th style="text-align:right">Потрачено</th>
           <th style="text-align:right">Баланс за месяц</th>
+          <th>Статус</th>
           <th></th>
         </tr>
       </thead>
@@ -379,6 +385,14 @@
     reader.readAsText(file);
   }
 
+  function approveRow(id) {
+    const pwd = prompt('Введите пароль для утверждения:');
+    if (pwd === null) return;
+    if (pwd !== 'vibe42') { alert('Неверный пароль'); return; }
+    const row = data.find(r => r.id === id);
+    if (row) { row.status = 'done'; render(); save(); }
+  }
+
   const DELETE_PASSWORD = 'vibe42';
 
   function deleteRow(id) {
@@ -429,6 +443,7 @@
         <td class="income">+${fmt(mIn)}</td>
         <td class="expense">−${fmt(mOut)}</td>
         <td class="${mBal>=0?'pos':'neg'}">${mBal>=0?'+':'−'}${fmt(mBal)}</td>
+        <td></td>
         <td style="text-align:center;color:var(--text-3)"><i class="ti ${isOpen?'ti-chevron-up':'ti-chevron-down'}"></i></td>
       </tr>`;
 
@@ -438,11 +453,18 @@
         rows.forEach(r => {
           const isFuture = r.date > today;
           const isFlagged = FLAGGED.some(name => r.desc.includes(name));
+          const isDone = r.status === 'done';
           html += `<tr class="detail-row${isFuture?' future':''}${isFlagged?' flagged':''}">
             <td>${r.date.split('-').reverse().join('.')}${isFuture?' <span class="badge badge-future" style="font-size:10px">Ожидается</span>':''}</td>
             <td style="text-align:left;padding-left:14px">${r.desc} <span style="color:var(--text-3);font-size:12px">${r.cat}</span></td>
             <td><span class="badge badge-${r.type}">${r.type==='income'?'Доход':'Расход'}</span></td>
             <td class="${r.type==='income'?'income':'expense'}" style="text-align:right">${r.type==='income'?'+':'−'}${fmt(r.amount)}</td>
+            <td>
+              ${isDone
+                ? '<span class="badge badge-done">✓ Выполнено</span>'
+                : `<button class="btn-approve" onclick="event.stopPropagation();approveRow(${r.id})">В планах → утвердить</button>`
+              }
+            </td>
             <td style="text-align:center"><button class="btn-del" onclick="event.stopPropagation();deleteRow(${r.id})" title="Удалить"><i class="ti ti-trash"></i></button></td>
           </tr>`;
         });
@@ -454,6 +476,7 @@
       <td class="income" style="text-align:right">+${fmt(totalIn)}</td>
       <td class="expense" style="text-align:right">−${fmt(totalOut)}</td>
       <td class="${totalBal>=0?'pos':'neg'}" style="text-align:right">${totalBal>=0?'+':'−'}${fmt(totalBal)}</td>
+      <td></td>
       <td></td>
     </tr>`;
 
