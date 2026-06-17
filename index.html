@@ -460,9 +460,11 @@
             <td><span class="badge badge-${r.type}">${r.type==='income'?'Доход':'Расход'}</span></td>
             <td class="${r.type==='income'?'income':'expense'}" style="text-align:right">${r.type==='income'?'+':'−'}${fmt(r.amount)}</td>
             <td>
-              ${isDone
-                ? '<span class="badge badge-done">✓ Выполнено</span>'
-                : `<button class="btn-approve" onclick="event.stopPropagation();approveRow(${r.id})">В планах → утвердить</button>`
+              ${r.type === 'expense'
+                ? isDone
+                  ? '<span class="badge badge-done">✓ Выполнено</span>'
+                  : `<button class="btn-approve" onclick="event.stopPropagation();approveRow(${r.id})">В планах → утвердить</button>`
+                : ''
               }
             </td>
             <td style="text-align:center"><button class="btn-del" onclick="event.stopPropagation();deleteRow(${r.id})" title="Удалить"><i class="ti ti-trash"></i></button></td>
