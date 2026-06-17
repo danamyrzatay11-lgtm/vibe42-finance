@@ -434,7 +434,7 @@
 
       if (isOpen) {
         const today = new Date().toISOString().slice(0,10);
-        const FLAGGED = ['Молдабаев Даурен', 'Нурмаганбетова Тогжан'];
+        const FLAGGED = ['Нурмаганбетова Тогжан'];
         rows.forEach(r => {
           const isFuture = r.date > today;
           const isFlagged = FLAGGED.some(name => r.desc.includes(name));
