@@ -184,6 +184,19 @@
     .badge-future { background: #FAC775; color: #412402; }
     .badge-flagged { background: #F7C1C1; color: #791F1F; }
 
+    .people-wrap { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+    .people-title { font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .people-body { display: none; }
+    .people-body.open { display: block; }
+    .people-add-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .people-add-row input { font-size: 14px; width: 200px; }
+    .people-add-row select { font-size: 14px; width: 130px; }
+    .people-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .person-chip { display: flex; align-items: center; gap: 6px; background: var(--bg-2); border: 0.5px solid var(--border); border-radius: 99px; padding: 4px 10px 4px 12px; font-size: 13px; }
+    .person-chip .role { font-size: 11px; color: var(--text-3); }
+    .person-chip button { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 14px; padding: 0 2px; line-height: 1; }
+    .person-chip button:hover { color: #993C1D; }
+
     .empty {
       text-align: center;
       color: var(--text-2);
@@ -220,11 +233,30 @@
     </div>
   </div>
 
+  <div class="people-wrap">
+    <div class="people-title" onclick="document.getElementById('people-body').classList.toggle('open');this.querySelector('.ti').classList.toggle('ti-chevron-down');this.querySelector('.ti').classList.toggle('ti-chevron-up')">
+      <span><i class="ti ti-users" style="font-size:15px;vertical-align:-2px;margin-right:6px"></i>Инженеры и коучи</span>
+      <i class="ti ti-chevron-down" style="font-size:15px"></i>
+    </div>
+    <div class="people-body" id="people-body">
+      <div class="people-add-row">
+        <input type="text" id="inp-person-name" placeholder="Имя Фамилия" />
+        <select id="inp-person-role">
+          <option value="Инженер">Инженер</option>
+          <option value="Коуч">Коуч</option>
+        </select>
+        <button class="btn-add" onclick="addPerson()"><i class="ti ti-plus"></i> Добавить</button>
+      </div>
+      <div class="people-list" id="people-list"></div>
+    </div>
+  </div>
+
   <div class="form-wrap">
     <div class="form-title">Добавить запись</div>
     <div class="form-row">
       <input type="date" id="inp-date" />
-      <input type="text" id="inp-desc" placeholder="Описание" />
+      <input type="text" id="inp-desc" placeholder="Описание" list="people-datalist" autocomplete="off" />
+      <datalist id="people-datalist"></datalist>
       <select id="inp-cat">
         <option value="">Категория</option>
         <optgroup label="Поступления">
@@ -296,6 +328,7 @@
   const API = 'https://api.github.com/repos/' + REPO + '/contents/' + FILE;
 
   let data = [];
+  let people = [];
   let expanded = {};
   let fileSha = '';
 
@@ -316,18 +349,21 @@
       });
       const json = await res.json();
       fileSha = json.sha;
-      data = JSON.parse(decodeURIComponent(escape(atob(json.content.replace(/\n/g,'')))));
+      const parsed = JSON.parse(decodeURIComponent(escape(atob(json.content.replace(/\n/g,'')))));
+      if (Array.isArray(parsed)) { data = parsed; people = []; }
+      else { data = parsed.data || []; people = parsed.people || []; }
       status('<i class="ti ti-cloud-check" style="font-size:15px;color:#0F6E56"></i> Синхронизировано');
     } catch(e) {
-      data = [];
+      data = []; people = [];
       status('<i class="ti ti-cloud-off" style="font-size:15px;color:#993C1D"></i> Нет связи');
     }
+    renderPeople();
     render();
   }
 
   async function save() {
     status('<i class="ti ti-refresh" style="font-size:15px"></i> Сохранение...');
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ data, people }))));
     try {
       const res = await fetch(API, {
         method: 'PUT',
@@ -383,6 +419,35 @@
       } catch { alert('Неверный формат файла'); }
     };
     reader.readAsText(file);
+  }
+
+  function addPerson() {
+    const name = document.getElementById('inp-person-name').value.trim();
+    const role = document.getElementById('inp-person-role').value;
+    if (!name) return;
+    people.push({ id: Date.now(), name, role });
+    document.getElementById('inp-person-name').value = '';
+    renderPeople();
+    save();
+  }
+
+  function deletePerson(id) {
+    people = people.filter(p => p.id !== id);
+    renderPeople();
+    save();
+  }
+
+  function renderPeople() {
+    const list = document.getElementById('people-list');
+    const dl = document.getElementById('people-datalist');
+    if (!list || !dl) return;
+    list.innerHTML = people.map(p => `
+      <div class="person-chip">
+        <span>${p.name}</span>
+        <span class="role">${p.role}</span>
+        <button onclick="deletePerson(${p.id})" title="Удалить"><i class="ti ti-x"></i></button>
+      </div>`).join('');
+    dl.innerHTML = people.map(p => `<option value="${p.name} (${p.role})">`).join('');
   }
 
   function approveRow(id) {
